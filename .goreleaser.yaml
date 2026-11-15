@@ -1,0 +1,57 @@
+# Release configuration. Check it without publishing anything:
+#
+#   goreleaser check
+#   goreleaser release --snapshot --clean    # builds into dist/, uploads nothing
+version: 2
+
+project_name: blast
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - main: ./cmd/blast
+    binary: blast
+    env:
+      - CGO_ENABLED=0
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w -X main.version={{ .Version }}
+
+archives:
+  - formats: [tar.gz]
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+    files:
+      - LICENSE
+      - README.md
+      - CHANGELOG.md
+      - docs/*.md
+
+checksum:
+  name_template: checksums.txt
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+
+# Homebrew. Uncomment once a repository named homebrew-tap exists under your
+# account, and a token that can push to it is stored as the secret
+# HOMEBREW_TAP_TOKEN (and passed to the release workflow's goreleaser step).
+#
+# homebrew_casks:
+#   - repository:
+#       owner: dilaziz
+#       name: homebrew-tap
+#       token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+#     homepage: https://github.com/dilaziz/blast
+#     description: See which customers a pricing change hits before you ship it.
+#     license: MIT

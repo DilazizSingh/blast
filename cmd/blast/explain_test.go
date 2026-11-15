@@ -41,7 +41,7 @@ func TestExplainAddsALabelledSummaryAndChangesNothingElse(t *testing.T) {
 	if stdout != plain || code != plainCode {
 		t.Errorf("with Ollama gone: exit code %d, output changed:\n%s", code, stdout)
 	}
-	wantLines(t, stderr, "blast: no AI summary: Ollama is not running on this machine")
+	wantLines(t, stderr, "blast: no AI summary: no answer from Ollama on this machine")
 
 	_, stderr, code = blast(t, "check", "--explain", "--format", "md")
 	if code != exitBadInput || !strings.Contains(stderr, "--explain works with the text format only") {

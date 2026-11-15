@@ -1,0 +1,74 @@
+# Checks every pull request that touches pricing. Copy this file to
+# .github/workflows/blast.yml in the repository that holds your pricing.
+#
+# It posts the report as a comment and fails the check when a rule is
+# broken, so a branch protection rule can block the merge.
+#
+# It assumes this layout; change the four paths under "env:" to match yours:
+#
+#   pricing/pricing.yml      the pricing file your team edits
+#   pricing/customers.json   from "blast import stripe", or kept by hand
+#   pricing/rules.yml
+#
+# "Today's pricing" is pricing/pricing.yml as the pull request's base branch
+# has it, so there is no second file to keep in step.
+name: blast
+
+on:
+  pull_request:
+    paths: ["pricing/**"]
+
+permissions:
+  contents: read
+  pull-requests: write # to post the comment
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      PRICING: pricing/pricing.yml
+      CUSTOMERS: pricing/customers.json
+      RULES: pricing/rules.yml
+      # The rules are read from the pull request itself. Protect the rules
+      # file with CODEOWNERS so that a change to it needs the right review.
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # the base branch is needed to read today's pricing
+          persist-credentials: false
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: stable
+
+      - name: Install blast
+        # Pin a released version rather than @latest once there is one.
+        run: go install github.com/dilaziz/blast/cmd/blast@latest
+
+      - name: Simulate the pricing change
+        id: blast
+        env:
+          BASE: origin/${{ github.base_ref }}
+        run: |
+          set +e
+          blast check --base "$BASE" --after "$PRICING" --customers "$CUSTOMERS" --rules "$RULES" --format md > report.md
+          code=$?
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          cat report.md >> "$GITHUB_STEP_SUMMARY"
+          # 0 and 1 both produced a report; anything else is a broken input.
+          test "$code" -le 1
+
+      - name: Comment on the pull request
+        # A pull request from a fork gets a read-only token and cannot
+        # comment; its report is still on the run's summary page.
+        if: github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+        run: gh pr comment "$PR" --edit-last --body-file report.md || gh pr comment "$PR" --body-file report.md
+
+      - name: Fail when a rule is broken
+        if: steps.blast.outputs.code == '1'
+        run: |
+          echo "This pricing change breaks one of your rules. See the report above."
+          exit 1

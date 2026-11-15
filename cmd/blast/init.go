@@ -54,7 +54,7 @@ func runInit(args []string, stdout, stderr io.Writer) int {
 // writeExample copies the embedded example into dir. Unless force is set it
 // writes nothing at all if any of the files is already there.
 func writeExample(dir string, force bool) error {
-	if err := os.MkdirAll(dir, 0o755); err != nil {
+	if err := os.MkdirAll(dir, 0o755); err != nil { // #nosec G301 -- an ordinary project directory
 		return err
 	}
 	if !force {
@@ -70,7 +70,7 @@ func writeExample(dir string, force bool) error {
 		if err != nil {
 			return err
 		}
-		if err := os.WriteFile(filepath.Join(dir, f.name), data, 0o644); err != nil {
+		if err := os.WriteFile(filepath.Join(dir, f.name), data, 0o644); err != nil { // #nosec G306 -- example files, meant to be read and committed
 			return err
 		}
 	}

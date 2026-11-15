@@ -3,7 +3,9 @@
 package load
 
 import (
+	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 
 	"github.com/dilaziz/blast/internal/diff"
@@ -49,12 +51,23 @@ type Scenario struct {
 	Segments      []diff.Filter // the rules file's segments, or the built-in ones
 }
 
+// ErrNoFile is the cause of an error about an input file that does not exist.
+var ErrNoFile = errors.New("no such file")
+
 // Open loads every input and makes sure the customers can be priced under
 // both configs.
 func Open(in Inputs) (*Scenario, error) {
-	read := in.Read
-	if read == nil {
-		read = os.ReadFile
+	source := in.Read
+	if source == nil {
+		source = os.ReadFile
+	}
+	read := func(path string) ([]byte, error) {
+		data, err := source(path)
+		if errors.Is(err, fs.ErrNotExist) {
+			// Each operating system words this differently; say it once.
+			return nil, fmt.Errorf("%s: %w", path, ErrNoFile)
+		}
+		return data, err
 	}
 	before, err := readConfig(read, in.Before)
 	if err != nil {

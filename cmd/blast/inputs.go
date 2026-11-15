@@ -66,7 +66,7 @@ func (s *selection) resolve(fs *flag.FlagSet) error {
 		if path == s.Before {
 			return gitShow(base, after)
 		}
-		return os.ReadFile(path)
+		return os.ReadFile(path) // #nosec G304 -- reading the files the user names is the tool's job
 	}
 	return nil
 }
@@ -90,6 +90,7 @@ func gitShow(rev, path string) ([]byte, error) {
 	if rev == "" || strings.HasPrefix(rev, "-") {
 		return nil, fmt.Errorf("%q is not a git revision", rev)
 	}
+	// #nosec G204 -- no shell is involved, and rev cannot be read as an option (checked above)
 	cmd := exec.Command("git", "show", "--end-of-options", rev+":./"+filepath.ToSlash(path))
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr

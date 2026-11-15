@@ -27,7 +27,7 @@ func watch(files []string) (changed <-chan struct{}, stop func(), err error) {
 			err = w.Add(filepath.Dir(abs))
 		}
 		if err != nil {
-			w.Close()
+			_ = w.Close()
 			return nil, nil, err
 		}
 		watched[abs] = true
@@ -63,5 +63,5 @@ func watch(files []string) (changed <-chan struct{}, stop func(), err error) {
 			}
 		}
 	}()
-	return out, func() { w.Close() }, nil
+	return out, func() { _ = w.Close() }, nil
 }

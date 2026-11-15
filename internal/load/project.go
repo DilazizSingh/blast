@@ -19,7 +19,7 @@ type Project struct {
 // ReadProject reads a project file. There being no such file is not an
 // error; it yields the zero Project.
 func ReadProject(path string) (Project, error) {
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) // #nosec G304 -- a fixed name in the working directory
 	if errors.Is(err, fs.ErrNotExist) {
 		return Project{}, nil
 	}

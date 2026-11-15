@@ -1,6 +1,7 @@
 package load
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"
@@ -241,7 +242,7 @@ func TestPolicySegments(t *testing.T) {
 func TestMissingFileNamesTheFile(t *testing.T) {
 	in := acmeInputs
 	in.After = filepath.Join(t.TempDir(), "nope.yml")
-	if _, err := Open(in); err == nil || !os.IsNotExist(err) {
+	if _, err := Open(in); !errors.Is(err, ErrNoFile) || err.Error() != in.After+": no such file" {
 		t.Errorf("Open with a missing file: %v", err)
 	}
 }

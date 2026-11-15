@@ -147,7 +147,7 @@ func TestBadInputExitsWithTwo(t *testing.T) {
 		{"unknown flag", []string{"check", "--befor", "x"}, "flag provided but not defined: -befor"},
 		{"stray argument", []string{"check", "pricing.new.yml"}, `blast: check takes flags only, not "pricing.new.yml"`},
 		{"unknown format", []string{"check", "--format", "xml"}, `blast: unknown format "xml" (available: `},
-		{"missing file", []string{"check", "--after", "nope.yml"}, "blast: open nope.yml: no such file or directory"},
+		{"missing file", []string{"check", "--after", "nope.yml"}, `blast: nope.yml: no such file (run "blast init" for an example to start from)`},
 		{"error names file, line and column", []string{"check", "--after", "broken.yml"}, `blast: broken.yml:6:11 unknown name "refered"`},
 		{"init will not overwrite", []string{"init"}, "blast: pricing.old.yml already exists (use --force to overwrite)"},
 		{"init with two directories", []string{"init", "a", "b"}, "blast: init takes at most one directory"},
@@ -234,7 +234,7 @@ func TestCraftedInputCannotReachTheTerminal(t *testing.T) {
 	}
 	wantLines(t, stderr, "customers.json line 2: customer id")
 
-	if got := visible("ok\x1b[2J‮\x07 fine\n\ttab"); got != "ok?[2J?? fine\n\ttab" {
+	if got := visible("ok\x1b[2J\u202e\x07 fine\n\ttab"); got != "ok?[2J?? fine\n\ttab" {
 		t.Errorf("visible = %q", got)
 	}
 }

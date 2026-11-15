@@ -13,7 +13,6 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
-	"syscall"
 	"time"
 	"unicode"
 
@@ -112,12 +111,10 @@ func generate(url, name, prompt string) (string, error) {
 		CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
 	}
 	resp, err := client.Post(url+"/api/generate", "application/json", bytes.NewReader(body))
-	if errors.Is(err, syscall.ECONNREFUSED) {
-		return "", fmt.Errorf("Ollama is not running on this machine; "+
-			"install it from ollama.com, then run \"ollama pull %s\"", name)
-	}
 	if err != nil {
-		return "", fmt.Errorf("Ollama did not answer: %w", err)
+		// Almost always this means it is not installed or not started.
+		return "", fmt.Errorf("no answer from Ollama on this machine; "+
+			"if it is not installed, get it from ollama.com, then run \"ollama pull %s\"", name)
 	}
 	defer resp.Body.Close()
 
@@ -131,11 +128,11 @@ func generate(url, name, prompt string) (string, error) {
 	}
 	switch {
 	case resp.StatusCode == http.StatusNotFound:
-		return "", fmt.Errorf("Ollama does not have the model %q; run \"ollama pull %s\" or choose another with --explain-model", name, name)
+		return "", fmt.Errorf("the model %q is not in Ollama; run \"ollama pull %s\" or choose another with --explain-model", name, name)
 	case resp.StatusCode != http.StatusOK:
-		return "", fmt.Errorf("Ollama refused (HTTP %d): %s", resp.StatusCode, clean(answer.Error))
+		return "", fmt.Errorf("refused by Ollama (HTTP %d): %s", resp.StatusCode, clean(answer.Error))
 	case err != nil:
-		return "", fmt.Errorf("Ollama gave an answer that could not be read: %w", err)
+		return "", fmt.Errorf("unreadable answer from Ollama: %w", err)
 	}
 	return answer.Response, nil
 }

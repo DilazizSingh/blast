@@ -139,7 +139,7 @@ func TestOllamaProblemsAreExplained(t *testing.T) {
 	closed := httptest.NewServer(http.NotFoundHandler())
 	closed.Close()
 	_, err := Summary(closed.URL, "gemma4", acme(t))
-	if want := `Ollama is not running on this machine; install it from ollama.com, then run "ollama pull gemma4"`; err == nil || err.Error() != want {
+	if want := `no answer from Ollama on this machine; if it is not installed, get it from ollama.com, then run "ollama pull gemma4"`; err == nil || err.Error() != want {
 		t.Errorf("not running:\n got  %v\n want %s", err, want)
 	}
 
@@ -148,10 +148,10 @@ func TestOllamaProblemsAreExplained(t *testing.T) {
 		reply, want string
 	}{
 		{http.StatusNotFound, `{"error":"model 'gemma4' not found"}`,
-			`Ollama does not have the model "gemma4"; run "ollama pull gemma4" or choose another with --explain-model`},
-		{http.StatusInternalServerError, `{"error":"out of memory\u001b[2J"}`, "Ollama refused (HTTP 500): out of memory[2J"},
+			`the model "gemma4" is not in Ollama; run "ollama pull gemma4" or choose another with --explain-model`},
+		{http.StatusInternalServerError, `{"error":"out of memory\u001b[2J"}`, "refused by Ollama (HTTP 500): out of memory[2J"},
 		{http.StatusOK, answer(" \n "), "the model returned nothing"},
-		{http.StatusOK, "<html>", "Ollama gave an answer that could not be read: "},
+		{http.StatusOK, "<html>", "unreadable answer from Ollama: "},
 	}
 	for _, tc := range cases {
 		url, _ := ollama(t, tc.status, tc.reply)

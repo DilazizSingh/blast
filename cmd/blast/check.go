@@ -112,6 +112,9 @@ func wrap(text string, width int) string {
 // ways, compare, and judge the result against the rules.
 func check(in load.Inputs, approvals []string) (report.Report, error) {
 	s, err := load.Open(in)
+	if errors.Is(err, load.ErrNoFile) {
+		return report.Report{}, fmt.Errorf("%w (run %q for an example to start from)", err, name+" init")
+	}
 	if err != nil {
 		return report.Report{}, err
 	}

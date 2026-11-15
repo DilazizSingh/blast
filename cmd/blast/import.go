@@ -109,7 +109,7 @@ func writeImport(dir string, res stripe.Result, force bool) (kept map[string]boo
 		{"rules.yml", []byte(starterRules), 0o644, false},
 	}
 
-	if err := os.MkdirAll(dir, 0o755); err != nil {
+	if err := os.MkdirAll(dir, 0o755); err != nil { // #nosec G301 -- an ordinary project directory
 		return nil, err
 	}
 	kept = map[string]bool{}
