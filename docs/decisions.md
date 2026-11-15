@@ -279,3 +279,32 @@ vulnerabilities.
 - **Re-importing never overwrites `pricing.new.yml` or `rules.yml`.**
 - **The starter `rules.yml` has no rules**, only two commented examples. A
   rule invented for someone else's business would fail their first run.
+
+## Step 10: `--explain`
+
+- **Ollama on this machine only**, at `127.0.0.1:11434`. The address is a
+  constant, the request uses no proxy and follows no redirect. `OLLAMA_HOST`
+  is not read; an Ollama on another port is not found. Nothing is sent to
+  any other host.
+- **The model is given totals and counts**: customers simulated and
+  affected, revenue before and after, each segment's totals, each rule's
+  outcome and how many customers break it. No customer id and nothing from a
+  customer's row. A test asserts the exact text sent.
+- **A summary containing a number blast did not compute is discarded**, and
+  the user is told which number. The check is on values, so `$5229` passes
+  for `$5,229.00`.
+- **Known limit of that check:** it knows which numbers were computed, not
+  what each means. If a segment has 3 customers, a made-up "3%" passes. It
+  also cannot see numbers written as words. This is why the summary is
+  always labelled "AI summary (generated, verify against the numbers
+  above)" and never alters the report or the exit code.
+- **Text format only.** `--explain` with `--format md` or `json` is an
+  error: generated prose does not belong in output other programs parse or a
+  bot posts under its own name.
+- **Model output is treated like any input file**: non-printing characters
+  are removed before it is printed.
+- **No Ollama, no problem**: one line on stderr says how to get it; the
+  report and exit code are untouched.
+- **Default model `gemma4`**, the one Ollama's documentation uses;
+  `--explain-model` picks another. Not run against a real Ollama here: none
+  is installed on the build machine. Tested against a stand-in.
