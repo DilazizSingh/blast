@@ -208,3 +208,16 @@ vulnerabilities.
   as a formula.
 - **The Markdown report is capped** (ten customers, forty changed settings)
   to stay inside GitHub's comment size limit.
+
+## Everyday use: `--base` and `blast.yml`
+
+- **`--base <git revision>`** takes today's pricing from git: "before" is
+  the `--after` file as that revision has it. A team keeps one pricing file
+  and reviews the uncommitted or branch change against `main`, with no
+  hand-kept "old" copy. blast runs `git show`; a revision starting with `-`
+  is refused so it cannot be read as an option.
+- **`blast.yml`** (optional, in the working directory) records `before` or
+  `base`, `after`, `customers` and `rules`, so `blast check` needs no flags.
+  Flags still win. It holds file locations only, never pricing.
+- **`--before` on the command line beats `base` in `blast.yml`**; giving
+  both as flags is an error.

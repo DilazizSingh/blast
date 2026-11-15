@@ -36,6 +36,9 @@ type Inputs struct {
 	After     string // pricing as proposed
 	Customers string
 	Rules     string
+	// Read fetches a file's contents; os.ReadFile when nil. `--base` uses
+	// it to serve the "before" pricing from git instead of from disk.
+	Read func(path string) ([]byte, error)
 }
 
 // Scenario is everything one check needs, loaded and cross-checked.
@@ -49,15 +52,19 @@ type Scenario struct {
 // Open loads every input and makes sure the customers can be priced under
 // both configs.
 func Open(in Inputs) (*Scenario, error) {
-	before, err := readConfig(in.Before)
+	read := in.Read
+	if read == nil {
+		read = os.ReadFile
+	}
+	before, err := readConfig(read, in.Before)
 	if err != nil {
 		return nil, err
 	}
-	after, err := readConfig(in.After)
+	after, err := readConfig(read, in.After)
 	if err != nil {
 		return nil, err
 	}
-	data, err := os.ReadFile(in.Customers)
+	data, err := read(in.Customers)
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +72,7 @@ func Open(in Inputs) (*Scenario, error) {
 	if err != nil {
 		return nil, err
 	}
-	data, err = os.ReadFile(in.Rules)
+	data, err = read(in.Rules)
 	if err != nil {
 		return nil, err
 	}
@@ -80,8 +87,8 @@ func Open(in Inputs) (*Scenario, error) {
 	return s, nil
 }
 
-func readConfig(path string) (model.Config, error) {
-	data, err := os.ReadFile(path)
+func readConfig(read func(string) ([]byte, error), path string) (model.Config, error) {
+	data, err := read(path)
 	if err != nil {
 		return model.Config{}, err
 	}

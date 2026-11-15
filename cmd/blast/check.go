@@ -26,12 +26,10 @@ func runCheck(args []string, stdout, stderr io.Writer) int {
 
 	fs := flag.NewFlagSet(name+" check", flag.ContinueOnError)
 	fs.SetOutput(stderr)
-	var in load.Inputs
-	fs.StringVar(&in.Before, "before", "pricing.old.yml", "pricing as it is today")
-	fs.StringVar(&in.After, "after", "pricing.new.yml", "pricing as proposed")
-	fs.StringVar(&in.Customers, "customers", "customers.json", "the customers to price")
-	fs.StringVar(&in.Rules, "rules", "rules.yml", "the rules the change must not break")
-	approve := fs.String("approve", "", `comma-separated sign-offs, read by approval("...") in rules`)
+	sel, err := selectInputs(fs)
+	if err != nil {
+		return fail(stderr, err)
+	}
 	format := fs.String("format", "text", "output format: "+available)
 	noColor := fs.Bool("no-color", false, "plain output, even on a terminal")
 	if code, ok := parse(fs, args); !ok {
@@ -45,7 +43,10 @@ func runCheck(args []string, stdout, stderr io.Writer) int {
 		return fail(stderr, fmt.Errorf("unknown format %q (available: %s)", *format, available))
 	}
 
-	rep, err := check(in, strings.FieldsFunc(*approve, func(r rune) bool { return r == ',' || r == ' ' }))
+	if err := sel.resolve(fs); err != nil {
+		return fail(stderr, err)
+	}
+	rep, err := check(sel.Inputs, sel.approvals())
 	if err != nil {
 		return fail(stderr, err)
 	}
