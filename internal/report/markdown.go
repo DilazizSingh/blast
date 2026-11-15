@@ -24,10 +24,10 @@ func Markdown(w io.Writer, r Report) error {
 	var b strings.Builder
 
 	fmt.Fprintf(&b, "### %s\n\n", mdTitle(r))
-	fmt.Fprintf(&b, "%s → %s · %s simulated\n\n", mdCode(r.Before), mdCode(r.After), plural(t.Customers, "customer"))
+	fmt.Fprintf(&b, "%s → %s · %s simulated\n\n", mdCode(r.Before), mdCode(r.After), Plural(t.Customers, "customer"))
 	b.WriteString("| | |\n|---|---|\n")
 	fmt.Fprintf(&b, "| **Blast radius** | %s of %s (%s) |\n",
-		model.Thousands(int64(t.Affected)), plural(t.Customers, "customer"), strings.ReplaceAll(Radius(t), "<", "&lt;"))
+		model.Thousands(int64(t.Affected)), Plural(t.Customers, "customer"), strings.ReplaceAll(Radius(t), "<", "&lt;"))
 	fmt.Fprintf(&b, "| **Revenue per cycle** | %s → %s (%s, %s) |\n",
 		mdMoney(t.OldCents), mdMoney(t.NewCents), mdMoney(t.ChangeCents()), ChangePercent(t))
 
@@ -62,9 +62,9 @@ func mdTitle(r Report) string {
 	case total == 0:
 		return "✅ Pricing change simulated (no rules defined)"
 	case broken == 0:
-		return fmt.Sprintf("✅ Pricing change passes all %s", plural(total, "rule"))
+		return fmt.Sprintf("✅ Pricing change passes all %s", Plural(total, "rule"))
 	default:
-		return fmt.Sprintf("❌ Pricing change breaks %d of %s", broken, plural(total, "rule"))
+		return fmt.Sprintf("❌ Pricing change breaks %d of %s", broken, Plural(total, "rule"))
 	}
 }
 

@@ -243,3 +243,39 @@ vulnerabilities.
 - **`dash` refuses to start without a terminal** and points to `check`.
 - **With `--base`, the "before" side is not watched**: it is a git
   revision, not a file. Press `r` after changing branches.
+
+## Step 9: Stripe import
+
+- **Standard library HTTP, no Stripe SDK.** Three read-only list calls did
+  not justify a dependency, and a client with a single `get` method cannot
+  write by accident.
+- **The key comes from `STRIPE_API_KEY` only**, never a flag, so it stays
+  out of shell history and `ps`. No error message contains it.
+- **`sk_live_` keys are refused. `rk_live_` needs `--live`.** Test-mode keys
+  work with no flag. The plan asks for restricted keys and test mode first;
+  this makes both the default path.
+- **No way to redirect the import.** The API address is a constant; tests
+  swap a package variable. There is no flag or environment variable that
+  could send the key elsewhere, and HTTP redirects are not followed.
+- **Bounded on every side**: 30 s per request, 32 MB per response, three
+  attempts when Stripe is busy, and a stop on a list that never ends.
+- **No real key was used at any point.** The import is tested against a
+  local stand-in serving Stripe's documented response shapes. It has not
+  been run against the live API; `docs/stripe.md` says so.
+- **`Stripe-Version` is pinned** to `2026-10-28.endive`, the version in
+  Stripe's docs when this was written. A discount's coupon is read from
+  `coupon` or `source.coupon`, since versions differ.
+- **One customer per subscription; one plan per product.** A product with
+  two prices for the same period becomes one plan per price, because nothing
+  says how to pair them. No "legacy" flag is guessed.
+- **What cannot be modelled is counted and reported**, never dropped
+  quietly: multi-item, metered, tiered, odd billing periods, other
+  currencies.
+- **Percentages never pass through a float.** `percent_off` is decoded as
+  text and parsed as hundredths.
+- **Currencies not counted in hundredths (JPY, KWD, …) are refused.**
+- **No names or emails are kept**, in memory past decoding or on disk.
+- **`customers.json` is written mode 0600.**
+- **Re-importing never overwrites `pricing.new.yml` or `rules.yml`.**
+- **The starter `rules.yml` has no rules**, only two commented examples. A
+  rule invented for someone else's business would fail their first run.

@@ -98,7 +98,7 @@ func outcome(v rules.Verdict) (phrase string, quoted []string, more int) {
 		return "must not hold: ", []string{v.Rule.Cond.String()}, 0
 	}
 	named := v.Customers[:min(len(v.Customers), maxNamed)]
-	return plural(len(v.Customers), "customer") + ": ", named, len(v.Customers) - len(named)
+	return Plural(len(v.Customers), "customer") + ": ", named, len(v.Customers) - len(named)
 }
 
 // Detail says in a few words how a rule came out.
@@ -138,8 +138,8 @@ func PlanLabel(c model.Customer) string {
 	return label
 }
 
-// plural formats a count with its noun: "1 customer", "12,000 customers".
-func plural(n int, noun string) string {
+// Plural formats a count with its noun: "1 customer", "12,000 customers".
+func Plural(n int, noun string) string {
 	if n != 1 {
 		noun += "s"
 	}

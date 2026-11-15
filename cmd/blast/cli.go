@@ -37,6 +37,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return runCheck(rest, stdout, stderr)
 	case "dash":
 		return runDash(rest, stdout, stderr)
+	case "import":
+		return runImport(rest, stdout, stderr)
 	case "version", "--version", "-v":
 		fmt.Fprintf(stdout, "%s %s\n", name, version)
 		return exitOK
@@ -58,6 +60,7 @@ func usage(w io.Writer) {
    %[3]s init  [--force] [dir]   write an example: pricing, customers and rules
    %[3]s check [flags]           simulate a pricing change and check your rules
    %[3]s dash  [flags]           the same, full screen, rerun live as you edit
+   %[3]s import stripe [flags]   build the files from a Stripe account, read-only
    %[3]s version
 
  Run "%[3]s check --help" for the flags; dash takes the same file flags.

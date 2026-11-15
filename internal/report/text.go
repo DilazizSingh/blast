@@ -37,12 +37,12 @@ func Text(w io.Writer, r Report) error {
 	}
 
 	fmt.Fprintf(&b, " %s\n", accent.Render(r.Before+" → "+r.After))
-	fmt.Fprintf(&b, " %s simulated\n", plural(t.Customers, "customer"))
+	fmt.Fprintf(&b, " %s simulated\n", Plural(t.Customers, "customer"))
 	section(segments)
 	section(customers)
 	section([]string{
 		fmt.Sprintf("  Blast radius  %s  %s of %s (%s)",
-			RadiusBar(t), model.Thousands(int64(t.Affected)), plural(t.Customers, "customer"), Radius(t)),
+			RadiusBar(t), model.Thousands(int64(t.Affected)), Plural(t.Customers, "customer"), Radius(t)),
 		fmt.Sprintf("  Revenue       %s -> %s  (%s, %s)",
 			model.Dollars(t.OldCents), model.Dollars(t.NewCents), model.Dollars(t.ChangeCents()), ChangePercent(t)),
 	})
@@ -140,7 +140,7 @@ func footer(r Report) string {
 	case broken == 0:
 		return good.Render("all rules pass") + muted.Render(fmt.Sprintf(" (%d checked) · exit code 0", total))
 	default:
-		return bad.Render(fmt.Sprintf("%d of %s broken", broken, plural(total, "rule"))) + muted.Render(" · exit code 1")
+		return bad.Render(fmt.Sprintf("%d of %s broken", broken, Plural(total, "rule"))) + muted.Render(" · exit code 1")
 	}
 }
 
