@@ -1,0 +1,7 @@
+plans:
+  starter:    { monthly: 29, annual: 290 }
+  pro:        { monthly: 99, annual: 990 }
+  legacy-pro: { monthly: 79, annual: 790, legacy: true }
+
+discounts:
+  WELCOME10: { percent: 10 }

@@ -1,0 +1,107 @@
+// Package load reads blast's input files and reports every problem by file
+// and line, so a broken input is fixed in one look.
+package load
+
+import (
+	"fmt"
+	"os"
+
+	"github.com/dilaziz/blast/internal/model"
+)
+
+// Error is a problem in an input file, pinned to where it was found.
+type Error struct {
+	File string
+	Line int // 1-based; 0 when the problem is the file as a whole
+	Col  int // 1-based; 0 when only the line is known
+	Msg  string
+}
+
+func (e *Error) Error() string {
+	switch {
+	case e.Line == 0:
+		return e.File + ": " + e.Msg
+	case e.Col == 0:
+		return fmt.Sprintf("%s line %d: %s", e.File, e.Line, e.Msg)
+	default:
+		return fmt.Sprintf("%s:%d:%d %s", e.File, e.Line, e.Col, e.Msg)
+	}
+}
+
+// Inputs names the files of one check.
+type Inputs struct {
+	Before    string // pricing as it is today
+	After     string // pricing as proposed
+	Customers string
+}
+
+// Scenario is everything one check needs, loaded and cross-checked.
+type Scenario struct {
+	Before, After model.Config
+	Customers     []model.Customer
+}
+
+// Open loads every input and makes sure the customers can be priced under
+// both configs.
+func Open(in Inputs) (*Scenario, error) {
+	before, err := readConfig(in.Before)
+	if err != nil {
+		return nil, err
+	}
+	after, err := readConfig(in.After)
+	if err != nil {
+		return nil, err
+	}
+	data, err := os.ReadFile(in.Customers)
+	if err != nil {
+		return nil, err
+	}
+	customers, lines, err := parseCustomers(in.Customers, data)
+	if err != nil {
+		return nil, err
+	}
+	s := &Scenario{Before: before, After: after, Customers: customers}
+	if err := s.crossCheck(in, lines); err != nil {
+		return nil, err
+	}
+	return s, nil
+}
+
+func readConfig(path string) (model.Config, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return model.Config{}, err
+	}
+	return parseConfig(path, data)
+}
+
+// crossCheck rejects customers that either config cannot price. A coupon only
+// has to exist on one side: adding or retiring a coupon is a change blast is
+// meant to simulate, while a coupon neither side knows is a typo.
+func (s *Scenario) crossCheck(in Inputs, lines []int) error {
+	sides := []struct {
+		file string
+		cfg  model.Config
+	}{{in.Before, s.Before}, {in.After, s.After}}
+
+	for i, c := range s.Customers {
+		fail := func(format string, args ...any) error {
+			return &Error{File: in.Customers, Line: lines[i], Msg: fmt.Sprintf(format, args...)}
+		}
+		for _, side := range sides {
+			plan, ok := side.cfg.Plans[c.Plan]
+			if !ok {
+				return fail("unknown plan %q (not defined in %s)", c.Plan, side.file)
+			}
+			if _, ok := plan.Prices[c.Billing]; !ok {
+				return fail("plan %q has no %s price in %s", c.Plan, c.Billing, side.file)
+			}
+		}
+		for _, coupon := range c.Coupons {
+			if !s.Before.HasDiscount(coupon) && !s.After.HasDiscount(coupon) {
+				return fail("unknown coupon %q (not defined in either pricing file)", coupon)
+			}
+		}
+	}
+	return nil
+}

@@ -1,0 +1,10 @@
+rules:
+  - name: max-one-discount
+    never: customer.discount_count > 1
+
+  - name: no-legacy-repricing
+    never: plan.legacy and invoice.new != invoice.old
+
+  - name: finance-approval
+    require: approval("finance")
+    when: diff.touches("payment")

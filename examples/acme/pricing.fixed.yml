@@ -1,0 +1,10 @@
+plans:
+  starter:    { monthly: 29, annual: 290 }
+  pro:        { monthly: 99, annual: 990 }
+  legacy-pro: { monthly: 79, annual: 790, legacy: true }
+
+discounts:
+  WELCOME10: { percent: 10 }
+  REFERRAL20:
+    percent: 20
+    when: billing == "annual" and referred and not legacy and coupon_count == 0

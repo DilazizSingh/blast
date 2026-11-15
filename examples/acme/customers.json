@@ -1,0 +1,12 @@
+[
+  { "id": "c1",  "plan": "starter",    "billing": "monthly", "coupons": [],            "referred": false },
+  { "id": "c2",  "plan": "pro",        "billing": "monthly", "coupons": [],            "referred": false },
+  { "id": "c3",  "plan": "pro",        "billing": "annual",  "coupons": [],            "referred": true },
+  { "id": "c4",  "plan": "pro",        "billing": "annual",  "coupons": ["WELCOME10"], "referred": true },
+  { "id": "c5",  "plan": "pro",        "billing": "annual",  "coupons": [],            "referred": false },
+  { "id": "c6",  "plan": "legacy-pro", "billing": "annual",  "coupons": [],            "referred": true },
+  { "id": "c7",  "plan": "starter",    "billing": "annual",  "coupons": ["WELCOME10"], "referred": true },
+  { "id": "c8",  "plan": "starter",    "billing": "annual",  "coupons": [],            "referred": true },
+  { "id": "c9",  "plan": "pro",        "billing": "monthly", "coupons": [],            "referred": true },
+  { "id": "c10", "plan": "legacy-pro", "billing": "annual",  "coupons": [],            "referred": false }
+]
