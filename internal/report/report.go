@@ -83,24 +83,49 @@ func ChangePercent(t diff.Totals) string {
 	return fmt.Sprintf("%s%d.%d%%", sign, tenths/10, tenths%10)
 }
 
-// Detail says in a few words how a rule came out.
-func Detail(v rules.Verdict) string {
+// outcome describes how a rule came out: a phrase, the values it quotes from
+// input files (customer ids or a condition), and how many more were left out.
+// Renderers decide how to show the quoted values safely.
+func outcome(v rules.Verdict) (phrase string, quoted []string, more int) {
 	switch {
 	case v.Status == rules.Passed:
-		return "ok"
+		return "ok", nil, 0
 	case v.Status == rules.NotTriggered:
-		return "not triggered"
+		return "not triggered", nil, 0
 	case len(v.Customers) == 0 && v.Rule.Kind == rules.Require:
-		return "needs " + v.Rule.Cond.String()
+		return "needs ", []string{v.Rule.Cond.String()}, 0
 	case len(v.Customers) == 0:
-		return "must not hold: " + v.Rule.Cond.String()
+		return "must not hold: ", []string{v.Rule.Cond.String()}, 0
 	}
 	named := v.Customers[:min(len(v.Customers), maxNamed)]
-	detail := plural(len(v.Customers), "customer") + ": " + strings.Join(named, ", ")
-	if rest := len(v.Customers) - len(named); rest > 0 {
-		detail += fmt.Sprintf(", +%s more", model.Thousands(int64(rest)))
+	return plural(len(v.Customers), "customer") + ": ", named, len(v.Customers) - len(named)
+}
+
+// Detail says in a few words how a rule came out.
+func Detail(v rules.Verdict) string {
+	phrase, quoted, more := outcome(v)
+	return phrase + strings.Join(quoted, ", ") + andMore(more)
+}
+
+func andMore(n int) string {
+	if n == 0 {
+		return ""
 	}
-	return detail
+	return fmt.Sprintf(", +%s more", model.Thousands(int64(n)))
+}
+
+// notable lists the customers worth showing: everyone whose invoice changes,
+// largest change first, then anyone who breaks a rule without their invoice
+// changing.
+func (r Report) notable() []diff.Row {
+	rows := r.Result.Changed()
+	broke := r.brokenBy()
+	for _, row := range r.Result.Rows {
+		if row.ChangeCents() == 0 && len(broke[row.Customer.ID]) > 0 {
+			rows = append(rows, row)
+		}
+	}
+	return rows
 }
 
 // planLabel describes what a customer is billed for: "pro annual", or

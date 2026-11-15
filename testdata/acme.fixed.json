@@ -1,0 +1,113 @@
+{
+  "version": 1,
+  "before": "pricing.old.yml",
+  "after": "pricing.fixed.yml",
+  "exit_code": 0,
+  "totals": {
+    "customers": 10,
+    "affected": 2,
+    "old_cents": 522900,
+    "new_cents": 497300,
+    "change_cents": -25600
+  },
+  "segments": [
+    {
+      "name": "annual + referred",
+      "customers": 5,
+      "affected": 2,
+      "old_cents": 322200,
+      "new_cents": 296600,
+      "change_cents": -25600
+    },
+    {
+      "name": "monthly",
+      "customers": 3,
+      "affected": 0,
+      "old_cents": 22700,
+      "new_cents": 22700,
+      "change_cents": 0
+    },
+    {
+      "name": "legacy plans",
+      "customers": 2,
+      "affected": 0,
+      "old_cents": 158000,
+      "new_cents": 158000,
+      "change_cents": 0
+    },
+    {
+      "name": "has coupon",
+      "customers": 2,
+      "affected": 0,
+      "old_cents": 115200,
+      "new_cents": 115200,
+      "change_cents": 0
+    }
+  ],
+  "rules": [
+    {
+      "name": "max-one-discount",
+      "kind": "never",
+      "condition": "customer.discount_count \u003e 1",
+      "status": "passed",
+      "customers": []
+    },
+    {
+      "name": "no-legacy-repricing",
+      "kind": "never",
+      "condition": "plan.legacy and invoice.new != invoice.old",
+      "status": "passed",
+      "customers": []
+    },
+    {
+      "name": "finance-approval",
+      "kind": "require",
+      "condition": "approval(\"finance\")",
+      "when": "diff.touches(\"payment\")",
+      "status": "not_triggered",
+      "customers": []
+    }
+  ],
+  "customers": [
+    {
+      "id": "c3",
+      "plan": "pro",
+      "billing": "annual",
+      "quantity": 1,
+      "old_cents": 99000,
+      "new_cents": 79200,
+      "change_cents": -19800,
+      "old_discounts": [],
+      "new_discounts": [
+        "REFERRAL20"
+      ],
+      "broken_rules": []
+    },
+    {
+      "id": "c8",
+      "plan": "starter",
+      "billing": "annual",
+      "quantity": 1,
+      "old_cents": 29000,
+      "new_cents": 23200,
+      "change_cents": -5800,
+      "old_discounts": [],
+      "new_discounts": [
+        "REFERRAL20"
+      ],
+      "broken_rules": []
+    }
+  ],
+  "config_changes": [
+    {
+      "path": "discounts.REFERRAL20.percent",
+      "old": null,
+      "new": "20%"
+    },
+    {
+      "path": "discounts.REFERRAL20.when",
+      "old": null,
+      "new": "billing == \"annual\" and referred and not legacy and coupon_count == 0"
+    }
+  ]
+}

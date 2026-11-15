@@ -71,9 +71,9 @@ func segmentLines(segments []diff.Segment) []string {
 	})
 }
 
-// customerLines lists who pays a different amount, largest change first.
+// customerLines lists the customers worth reading about; see Report.notable.
 func customerLines(r Report) []string {
-	changed := r.Result.Changed()
+	changed := r.notable()
 	if len(changed) == 0 {
 		return nil
 	}
@@ -89,8 +89,10 @@ func customerLines(r Report) []string {
 		t.add(c.ID, planLabel(c),
 			model.Dollars(row.Old.TotalCents), model.Dollars(row.New.TotalCents), model.Dollars(row.ChangeCents()), broken)
 	}
-	lines := t.lines(func(_ int, cells []string) {
-		cells[4] = warn.Render(cells[4])
+	lines := t.lines(func(row int, cells []string) {
+		if changed[row].ChangeCents() != 0 {
+			cells[4] = warn.Render(cells[4])
+		}
 		if cells[5] != "" {
 			cells[5] = bad.Render(cells[5])
 		}

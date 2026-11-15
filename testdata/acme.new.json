@@ -1,0 +1,172 @@
+{
+  "version": 1,
+  "before": "pricing.old.yml",
+  "after": "pricing.new.yml",
+  "exit_code": 1,
+  "totals": {
+    "customers": 10,
+    "affected": 5,
+    "old_cents": 522900,
+    "new_cents": 458460,
+    "change_cents": -64440
+  },
+  "segments": [
+    {
+      "name": "annual + referred",
+      "customers": 5,
+      "affected": 5,
+      "old_cents": 322200,
+      "new_cents": 257760,
+      "change_cents": -64440
+    },
+    {
+      "name": "monthly",
+      "customers": 3,
+      "affected": 0,
+      "old_cents": 22700,
+      "new_cents": 22700,
+      "change_cents": 0
+    },
+    {
+      "name": "legacy plans",
+      "customers": 2,
+      "affected": 1,
+      "old_cents": 158000,
+      "new_cents": 142200,
+      "change_cents": -15800
+    },
+    {
+      "name": "has coupon",
+      "customers": 2,
+      "affected": 2,
+      "old_cents": 115200,
+      "new_cents": 92160,
+      "change_cents": -23040
+    }
+  ],
+  "rules": [
+    {
+      "name": "max-one-discount",
+      "kind": "never",
+      "condition": "customer.discount_count \u003e 1",
+      "status": "broken",
+      "customers": [
+        "c4",
+        "c7"
+      ]
+    },
+    {
+      "name": "no-legacy-repricing",
+      "kind": "never",
+      "condition": "plan.legacy and invoice.new != invoice.old",
+      "status": "broken",
+      "customers": [
+        "c6"
+      ]
+    },
+    {
+      "name": "finance-approval",
+      "kind": "require",
+      "condition": "approval(\"finance\")",
+      "when": "diff.touches(\"payment\")",
+      "status": "not_triggered",
+      "customers": []
+    }
+  ],
+  "customers": [
+    {
+      "id": "c3",
+      "plan": "pro",
+      "billing": "annual",
+      "quantity": 1,
+      "old_cents": 99000,
+      "new_cents": 79200,
+      "change_cents": -19800,
+      "old_discounts": [],
+      "new_discounts": [
+        "REFERRAL20"
+      ],
+      "broken_rules": []
+    },
+    {
+      "id": "c4",
+      "plan": "pro",
+      "billing": "annual",
+      "quantity": 1,
+      "old_cents": 89100,
+      "new_cents": 71280,
+      "change_cents": -17820,
+      "old_discounts": [
+        "WELCOME10"
+      ],
+      "new_discounts": [
+        "WELCOME10",
+        "REFERRAL20"
+      ],
+      "broken_rules": [
+        "max-one-discount"
+      ]
+    },
+    {
+      "id": "c6",
+      "plan": "legacy-pro",
+      "billing": "annual",
+      "quantity": 1,
+      "old_cents": 79000,
+      "new_cents": 63200,
+      "change_cents": -15800,
+      "old_discounts": [],
+      "new_discounts": [
+        "REFERRAL20"
+      ],
+      "broken_rules": [
+        "no-legacy-repricing"
+      ]
+    },
+    {
+      "id": "c8",
+      "plan": "starter",
+      "billing": "annual",
+      "quantity": 1,
+      "old_cents": 29000,
+      "new_cents": 23200,
+      "change_cents": -5800,
+      "old_discounts": [],
+      "new_discounts": [
+        "REFERRAL20"
+      ],
+      "broken_rules": []
+    },
+    {
+      "id": "c7",
+      "plan": "starter",
+      "billing": "annual",
+      "quantity": 1,
+      "old_cents": 26100,
+      "new_cents": 20880,
+      "change_cents": -5220,
+      "old_discounts": [
+        "WELCOME10"
+      ],
+      "new_discounts": [
+        "WELCOME10",
+        "REFERRAL20"
+      ],
+      "broken_rules": [
+        "max-one-discount"
+      ]
+    }
+  ],
+  "config_changes": [
+    {
+      "path": "discounts.REFERRAL20.percent",
+      "old": null,
+      "new": "20%"
+    },
+    {
+      "path": "discounts.REFERRAL20.when",
+      "old": null,
+      "new": "billing == \"annual\" and referred"
+    }
+  ]
+}

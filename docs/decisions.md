@@ -186,3 +186,25 @@ vulnerabilities.
   machine". Its method was followed by hand instead: each finding has a
   working exploit, a root-cause fix, and the exploit kept as a test. See
   `docs/security.md`.
+
+## Step 7: reports
+
+- **Three renderers, one `Report`.** `--format text|md|json`.
+- **Golden files live in `testdata/`** and pin the real CLI output for the
+  example, red and green, in all three formats. Regenerate after an intended
+  change with `go test ./cmd/blast -run TestGolden -update`.
+- **JSON is versioned (`"version": 1`) and holds integers only.** Money is
+  cents; ratios are left for the consumer to compute.
+- **JSON lists every notable customer; text and Markdown list ten.** Notable
+  means the invoice changed or the customer breaks a rule.
+- **A customer who breaks a rule without a price change is still listed.**
+  Someone who already held two discounts before the change is the rule's
+  business even though their invoice did not move.
+- **Markdown treats every name from an input file as hostile.** The comment
+  is posted with a bot's authority while the names may come from the pull
+  request's author, so they are always inline code: no HTML, no `@mention`,
+  no link, no way out of the table cell.
+- **Dollar signs are escaped in Markdown**, since some renderers read `$…$`
+  as a formula.
+- **The Markdown report is capped** (ten customers, forty changed settings)
+  to stay inside GitHub's comment size limit.

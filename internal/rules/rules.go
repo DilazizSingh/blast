@@ -56,6 +56,16 @@ const (
 	NotTriggered // its `when:` held nowhere, so there was nothing to judge
 )
 
+func (s Status) String() string {
+	switch s {
+	case Passed:
+		return "passed"
+	case Broken:
+		return "broken"
+	}
+	return "not_triggered"
+}
+
 // Verdict is one rule's outcome for a change.
 type Verdict struct {
 	Rule   Rule

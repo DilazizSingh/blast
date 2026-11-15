@@ -17,6 +17,8 @@ import (
 // formats are the ways a report can be written.
 var formats = map[string]func(io.Writer, report.Report) error{
 	"text": report.Text,
+	"md":   report.Markdown,
+	"json": report.JSON,
 }
 
 func runCheck(args []string, stdout, stderr io.Writer) int {
