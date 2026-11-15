@@ -35,6 +35,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return runInit(rest, stdout, stderr)
 	case "check":
 		return runCheck(rest, stdout, stderr)
+	case "dash":
+		return runDash(rest, stdout, stderr)
 	case "version", "--version", "-v":
 		fmt.Fprintf(stdout, "%s %s\n", name, version)
 		return exitOK
@@ -55,9 +57,10 @@ func usage(w io.Writer) {
  Usage:
    %[3]s init  [--force] [dir]   write an example: pricing, customers and rules
    %[3]s check [flags]           simulate a pricing change and check your rules
+   %[3]s dash  [flags]           the same, full screen, rerun live as you edit
    %[3]s version
 
- Run "%[3]s check --help" for its flags.
+ Run "%[3]s check --help" for the flags; dash takes the same file flags.
 
  Exit codes: 0 every rule passes, 1 a rule broke, 2 bad input.
 `, report.Banner(), report.Pitch, name)

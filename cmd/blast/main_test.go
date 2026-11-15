@@ -259,3 +259,13 @@ func TestCSVCustomersEndToEnd(t *testing.T) {
 		"1 of 2 customers (50%)",
 	)
 }
+
+func TestDashRefusesToRunWithoutATerminal(t *testing.T) {
+	t.Chdir(t.TempDir())
+	blast(t, "init")
+	stdout, stderr, code := blast(t, "dash")
+	if code != exitBadInput || stdout != "" {
+		t.Errorf("exit code %d, stdout %q; want %d and nothing", code, stdout, exitBadInput)
+	}
+	wantLines(t, stderr, `blast: dash needs a terminal; in scripts and CI use "blast check"`)
+}

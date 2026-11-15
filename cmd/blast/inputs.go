@@ -71,6 +71,15 @@ func (s *selection) resolve(fs *flag.FlagSet) error {
 	return nil
 }
 
+// files are the inputs that live on disk, for the dashboard to watch.
+func (s *selection) files() []string {
+	files := []string{s.After, s.Customers, s.Rules}
+	if s.base == "" {
+		files = append(files, s.Before)
+	}
+	return files
+}
+
 func (s *selection) approvals() []string {
 	return strings.FieldsFunc(s.approve, func(r rune) bool { return r == ',' || r == ' ' })
 }

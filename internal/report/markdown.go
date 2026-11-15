@@ -73,11 +73,11 @@ func mdCustomers(b *strings.Builder, r Report) {
 	if len(rows) == 0 {
 		return
 	}
-	broke := r.brokenBy()
+	broke := r.BrokenBy()
 	b.WriteString("\n#### Customers, largest change first\n\n| Customer | Plan | Old | New | Change | Rules broken |\n|---|---|--:|--:|--:|---|\n")
 	for _, row := range rows[:min(len(rows), maxListed)] {
 		c := row.Customer
-		fmt.Fprintf(b, "| %s | %s | %s | %s | %s | %s |\n", mdCode(c.ID), mdCode(planLabel(c)),
+		fmt.Fprintf(b, "| %s | %s | %s | %s | %s | %s |\n", mdCode(c.ID), mdCode(PlanLabel(c)),
 			mdMoney(row.Old.TotalCents), mdMoney(row.New.TotalCents), mdMoney(row.ChangeCents()), mdCodes(broke[c.ID]))
 	}
 	if rest := len(rows) - maxListed; rest > 0 {

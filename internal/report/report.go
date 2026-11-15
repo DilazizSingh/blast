@@ -37,8 +37,8 @@ func (r Report) ExitCode() int {
 	return 0
 }
 
-// brokenBy maps each customer to the rules they break.
-func (r Report) brokenBy() map[string][]string {
+// BrokenBy maps each customer to the rules they break.
+func (r Report) BrokenBy() map[string][]string {
 	out := map[string][]string{}
 	for _, v := range r.Verdicts {
 		for _, id := range v.Customers {
@@ -119,7 +119,7 @@ func andMore(n int) string {
 // changing.
 func (r Report) notable() []diff.Row {
 	rows := r.Result.Changed()
-	broke := r.brokenBy()
+	broke := r.BrokenBy()
 	for _, row := range r.Result.Rows {
 		if row.ChangeCents() == 0 && len(broke[row.Customer.ID]) > 0 {
 			rows = append(rows, row)
@@ -128,9 +128,9 @@ func (r Report) notable() []diff.Row {
 	return rows
 }
 
-// planLabel describes what a customer is billed for: "pro annual", or
+// PlanLabel describes what a customer is billed for: "pro annual", or
 // "pro annual ×12" for twelve seats.
-func planLabel(c model.Customer) string {
+func PlanLabel(c model.Customer) string {
 	label := c.Plan + " " + string(c.Billing)
 	if c.Units() > 1 {
 		label += " ×" + model.Thousands(c.Units())

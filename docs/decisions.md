@@ -221,3 +221,25 @@ vulnerabilities.
   Flags still win. It holds file locations only, never pricing.
 - **`--before` on the command line beats `base` in `blast.yml`**; giving
   both as flags is an error.
+
+## Step 8: dashboard
+
+- **`internal/tui` on Bubble Tea v2**, with Lip Gloss for colour. No
+  Bubbles and no chart library: two lists and a table did not need them.
+- **One cursor runs through segments and rules** on the left, rather than a
+  second key to switch panels. `enter` drills in, `esc` backs out.
+- **"all customers" heads the segment list**, so the whole change can be
+  browsed, not only its slices.
+- **Lists show every member, largest change first**, and scroll. Column
+  widths come from the whole list so they hold still while scrolling.
+- **In a narrow window the plan column goes first, then the old price.**
+  Which rule a customer breaks matters more than either.
+- **Live rerun watches each file's directory**, because editors replace
+  files rather than write into them. Changes are debounced by 100 ms.
+- **A failed rerun keeps the last good result on screen** under its error.
+  A half-saved file is normal while editing.
+- **The frame is red, green or grey by verdict**, and the verdict is
+  highlighted for a moment when it flips.
+- **`dash` refuses to start without a terminal** and points to `check`.
+- **With `--base`, the "before" side is not watched**: it is a git
+  revision, not a file. Press `r` after changing branches.

@@ -97,7 +97,7 @@ func JSON(w io.Writer, r Report) error {
 		}
 		out.Rules[i] = rule
 	}
-	broke := r.brokenBy()
+	broke := r.BrokenBy()
 	for _, row := range r.notable() {
 		c := row.Customer
 		out.Customers = append(out.Customers, jsonCustomer{

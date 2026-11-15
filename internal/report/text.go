@@ -42,7 +42,7 @@ func Text(w io.Writer, r Report) error {
 	section(customers)
 	section([]string{
 		fmt.Sprintf("  Blast radius  %s  %s of %s (%s)",
-			radiusBar(t), model.Thousands(int64(t.Affected)), plural(t.Customers, "customer"), Radius(t)),
+			RadiusBar(t), model.Thousands(int64(t.Affected)), plural(t.Customers, "customer"), Radius(t)),
 		fmt.Sprintf("  Revenue       %s -> %s  (%s, %s)",
 			model.Dollars(t.OldCents), model.Dollars(t.NewCents), model.Dollars(t.ChangeCents()), ChangePercent(t)),
 	})
@@ -77,7 +77,7 @@ func customerLines(r Report) []string {
 	if len(changed) == 0 {
 		return nil
 	}
-	broke := r.brokenBy()
+	broke := r.BrokenBy()
 	t := table{right: []bool{false, false, true, true, true, false}}
 	t.add("Customer", "Plan", "Old", "New", "Change", "")
 	for _, row := range changed[:min(len(changed), maxListed)] {
@@ -86,7 +86,7 @@ func customerLines(r Report) []string {
 		if names := broke[c.ID]; len(names) > 0 {
 			broken = "✗ " + strings.Join(names, ", ")
 		}
-		t.add(c.ID, planLabel(c),
+		t.add(c.ID, PlanLabel(c),
 			model.Dollars(row.Old.TotalCents), model.Dollars(row.New.TotalCents), model.Dollars(row.ChangeCents()), broken)
 	}
 	lines := t.lines(func(row int, cells []string) {
@@ -119,9 +119,9 @@ func ruleLines(verdicts []rules.Verdict) []string {
 	return lines
 }
 
-// radiusBar draws the share of customers affected. Any affected customer
+// RadiusBar draws the share of customers affected. Any affected customer
 // lights at least one cell, so a small radius never looks like none.
-func radiusBar(t diff.Totals) string {
+func RadiusBar(t diff.Totals) string {
 	lit := 0
 	if t.Customers > 0 {
 		lit = (t.Affected*barCells*2 + t.Customers) / (2 * t.Customers)
