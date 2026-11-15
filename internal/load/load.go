@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/dilaziz/blast/internal/diff"
 	"github.com/dilaziz/blast/internal/model"
+	"github.com/dilaziz/blast/internal/rules"
 )
 
 // Error is a problem in an input file, pinned to where it was found.
@@ -33,12 +35,15 @@ type Inputs struct {
 	Before    string // pricing as it is today
 	After     string // pricing as proposed
 	Customers string
+	Rules     string
 }
 
 // Scenario is everything one check needs, loaded and cross-checked.
 type Scenario struct {
 	Before, After model.Config
 	Customers     []model.Customer
+	Rules         []rules.Rule
+	Segments      []diff.Filter // the rules file's segments, or the built-in ones
 }
 
 // Open loads every input and makes sure the customers can be priced under
@@ -60,7 +65,15 @@ func Open(in Inputs) (*Scenario, error) {
 	if err != nil {
 		return nil, err
 	}
-	s := &Scenario{Before: before, After: after, Customers: customers}
+	data, err = os.ReadFile(in.Rules)
+	if err != nil {
+		return nil, err
+	}
+	policy, segments, err := parsePolicy(in.Rules, data)
+	if err != nil {
+		return nil, err
+	}
+	s := &Scenario{Before: before, After: after, Customers: customers, Rules: policy, Segments: segments}
 	if err := s.crossCheck(in, lines); err != nil {
 		return nil, err
 	}

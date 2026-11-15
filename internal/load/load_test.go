@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/dilaziz/blast/internal/model"
+	"github.com/dilaziz/blast/internal/rules"
 )
 
 const acme = "../../examples/acme/"
@@ -14,6 +15,7 @@ var acmeInputs = Inputs{
 	Before:    acme + "pricing.old.yml",
 	After:     acme + "pricing.new.yml",
 	Customers: acme + "customers.json",
+	Rules:     acme + "rules.yml",
 }
 
 func TestOpenExample(t *testing.T) {
@@ -36,6 +38,12 @@ func TestOpenExample(t *testing.T) {
 	}
 	if len(s.Customers) != 10 {
 		t.Fatalf("loaded %d customers, want 10", len(s.Customers))
+	}
+	if len(s.Rules) != 3 || s.Rules[2].Name != "finance-approval" || s.Rules[2].Kind != rules.Require || s.Rules[2].When == nil {
+		t.Errorf("rules loaded as %+v", s.Rules)
+	}
+	if len(s.Segments) != 4 || s.Segments[0].Name != "annual + referred" {
+		t.Errorf("without a segments section the built-in ones apply; got %+v", s.Segments)
 	}
 	c4 := s.Customers[3]
 	if c4.ID != "c4" || c4.Billing != model.Annual || !c4.Referred || !c4.HasCoupon("WELCOME10") {
@@ -72,6 +80,8 @@ func TestConfigErrors(t *testing.T) {
 			`p.yml:4:42 expected value after ">"`},
 		{"condition in a block scalar", "plans:\n  pro: { monthly: 5 }\ndiscounts:\n  X:\n    percent: 10\n    when: |\n      referred and\n",
 			`p.yml:6:11 expected value after "and"`},
+		{"rule-only function in a discount", "plans:\n  pro: { monthly: 5 }\ndiscounts:\n  X:\n    percent: 10\n    when: approval(\"finance\")\n",
+			`p.yml:6:11 unknown function "approval"`},
 		{"unknown discount field", "plans:\n  pro: { monthly: 5 }\ndiscounts:\n  X:\n    percent: 10\n    if: referred\n",
 			`p.yml line 6: unknown discount field "if" (expected percent, amount or when)`},
 	}
@@ -172,9 +182,10 @@ func TestCrossCheck(t *testing.T) {
 			t.Chdir(dir)
 			write(t, "pricing.old.yml", pricing)
 			write(t, "pricing.new.yml", tc.after)
+			write(t, "rules.yml", "rules: []\n")
 			write(t, "customers.json", "[\n  { \"id\": \"c0\", \"plan\": \"solo\", \"billing\": \"monthly\" },\n  "+tc.customer+"\n]\n")
 
-			_, err := Open(Inputs{Before: "pricing.old.yml", After: "pricing.new.yml", Customers: "customers.json"})
+			_, err := Open(Inputs{Before: "pricing.old.yml", After: "pricing.new.yml", Customers: "customers.json", Rules: "rules.yml"})
 			switch {
 			case tc.want == "" && err != nil:
 				t.Errorf("unexpected error: %v", err)
@@ -182,6 +193,48 @@ func TestCrossCheck(t *testing.T) {
 				t.Errorf("got  %v\nwant %s", err, tc.want)
 			}
 		})
+	}
+}
+
+func TestPolicyErrors(t *testing.T) {
+	cases := []struct{ name, yaml, want string }{
+		{"the plan's example", "rules:\n  - name: a\n    never: customer.discount_count >\n", `r.yml:3:37 expected value after ">"`},
+		{"unknown section", "rule:\n  - name: a\n", `r.yml line 1: unknown section "rule" (expected rules or segments)`},
+		{"rules not a list", "rules:\n  a: b\n", "r.yml line 2: rules must be a list"},
+		{"rule not a mapping", "rules:\n  - never\n", "r.yml line 2: a rule must be a mapping of names to settings"},
+		{"no name", "rules:\n  - never: referred\n", `r.yml line 2: a rule needs a "name"`},
+		{"no condition", "rules:\n  - name: a\n    when: referred\n", `r.yml line 2: rule "a" needs a never or a require`},
+		{"never and require", "rules:\n  - name: a\n    never: referred\n    require: referred\n",
+			"r.yml line 4: a rule has either never or require, not both"},
+		{"duplicate name", "rules:\n  - name: a\n    never: referred\n  - name: a\n    never: legacy\n", `r.yml line 4: "a" is defined twice`},
+		{"unknown field", "rules:\n  - name: a\n    unless: referred\n", `r.yml line 3: unknown rule field "unless" (expected name, never, require or when)`},
+		{"unknown name", "rules:\n  - name: a\n    never: invoice.total > 1\n", `r.yml:3:12 unknown name "invoice.total"`},
+		{"type error in when", "rules:\n  - name: a\n    never: referred\n    when: \"plan.legacy == 1\"\n", "r.yml:4:24 cannot compare true/false with a number"},
+		{"segment without where", "segments:\n  - name: big\n", `r.yml line 2: segment "big" needs a "where"`},
+		{"segment without name", "segments:\n  - where: referred\n", `r.yml line 2: a segment needs a "name"`},
+		{"segment reading an invoice", "segments:\n  - name: big\n    where: invoice.new > 500\n", `r.yml:3:12 unknown name "invoice.new"`},
+		{"unknown segment field", "segments:\n  - name: big\n    filter: referred\n", `r.yml line 3: unknown segment field "filter" (expected name or where)`},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, _, err := parsePolicy("r.yml", []byte(tc.yaml))
+			if err == nil || err.Error() != tc.want {
+				t.Errorf("got  %v\nwant %s", err, tc.want)
+			}
+		})
+	}
+}
+
+func TestPolicySegments(t *testing.T) {
+	policy, segments, err := parsePolicy("r.yml", []byte("segments:\n  - name: pro annual\n    where: plan == \"pro\" and billing == \"annual\"\n"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(policy) != 0 {
+		t.Errorf("a file without rules loaded %d of them", len(policy))
+	}
+	if len(segments) != 1 || segments[0].Name != "pro annual" || segments[0].Where == nil {
+		t.Errorf("segments = %+v, want just the one the file defines", segments)
 	}
 }
 

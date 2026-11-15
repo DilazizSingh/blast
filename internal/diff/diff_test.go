@@ -16,11 +16,14 @@ const acme = "../../examples/acme/"
 
 func compareExample(t *testing.T, after string) diff.Result {
 	t.Helper()
-	s, err := load.Open(load.Inputs{Before: acme + "pricing.old.yml", After: acme + after, Customers: acme + "customers.json"})
+	s, err := load.Open(load.Inputs{
+		Before: acme + "pricing.old.yml", After: acme + after,
+		Customers: acme + "customers.json", Rules: acme + "rules.yml",
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	res, err := diff.Compare(s.Customers, s.Before, s.After, diff.DefaultFilters())
+	res, err := diff.Compare(s.Customers, s.Before, s.After, s.Segments)
 	if err != nil {
 		t.Fatal(err)
 	}

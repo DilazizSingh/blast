@@ -103,3 +103,29 @@ was chosen and why, so it can be revisited.
   customers, the biggest movers are the ones worth reading.
 - **No progress bar.** Pricing is two integer passes per customer and finishes
   before a bar could draw.
+
+## Step 5: rules
+
+- **A rule is `never:` or `require:`, with an optional `when:`.** `never`
+  breaks where its condition is true, `require` where it is false, and where
+  `when:` is false the rule does not apply.
+- **Rules are per customer or about the whole change, decided by what they
+  read.** A rule that reads any customer fact is judged once per customer and
+  reports who broke it. A rule built only from `approval()` and
+  `diff.touches()` is judged once. No keyword is needed to tell them apart.
+- **"Not triggered"** means the rule's `when:` held nowhere.
+- **`customer.discount_count` and `plan.legacy` describe the new pricing**,
+  the side under test. `invoice.old`, `invoice.new` and `invoice.change` are
+  dollar amounts.
+- **`diff.touches("x")`** is true when the two pricing files differ at the
+  dotted path `x` or anywhere under it: `"payment"`, `"plans.pro"`,
+  `"discounts.REFERRAL20.percent"`. The `payment` section exists for this:
+  blast does not price it, it only notices that it changed.
+- **`approval("finance")`** is true when `finance` was passed to
+  `blast check --approve`. blast records that someone said so; collecting
+  the sign-off (a PR label, a review) belongs to whatever calls it.
+- **A rules file may also define `segments:`** (name plus `where:`), replacing
+  the four built-in ones. Without it the example-shaped defaults would be the
+  only grouping available to every other company.
+- **Fuzzing:** `make fuzz`. A 25-second run made 6.9 million attempts
+  without a crash.
