@@ -59,3 +59,31 @@ was chosen and why, so it can be revisited.
   line is known, `file:line:col message` when the character is too.
 - **CSV customers are not in yet.** The plan marks it "add later"; JSON is
   what `init` and the Stripe import produce.
+
+## Step 3: invoice engine
+
+- **The expression language lives in `internal/rules/expr`**, a leaf package
+  under `rules`. `sim` needs it for `when:` and `rules` needs `diff`, which
+  needs `sim`; one package for both would be an import cycle. `rules` itself
+  (Step 5) holds what a rule is and how it is checked.
+- **The language core was built here, not in Step 5**, because pricing the
+  ten example customers needs `when:` evaluated.
+- **Expressions are type-checked when compiled.** Every variable has a known
+  type, so `refered` or `billing > 1` is an error at load time with a column,
+  and evaluation cannot fail halfway through a customer list.
+- **Numbers in expressions are fixed-point hundredths.** `712.80` compares
+  exactly against cents and `2` against a count, with one integer type and no
+  floats. More than two decimal places is an error.
+- **Text is double-quoted, with no escape sequences.** Plan and coupon names
+  do not need them.
+- **A discount applies if the customer holds the coupon or its `when:` is
+  true**, exactly as the plan's Step 3 words it. A held coupon applies even
+  where `when:` is false.
+- **Stacking order is the pricing file's declaration order**, for coupons and
+  automatic discounts alike. One rule, controlled in one place.
+- **Rounding is half up after every discount**, per the plan's formula.
+- **Fixed amounts are per invoice and stop at zero.**
+- **Expressions are capped at 4,096 characters**, which bounds parser
+  recursion without tracking depth.
+- `Engine.Invoice(customer)` replaces the plan's `Invoice(c, cfg)` sketch so
+  conditions compile once per config rather than once per customer.

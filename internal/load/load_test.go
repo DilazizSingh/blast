@@ -65,6 +65,13 @@ func TestConfigErrors(t *testing.T) {
 			`p.yml line 4: discount "X" needs exactly one of percent or amount`},
 		{"neither", "plans:\n  pro: { monthly: 5 }\ndiscounts:\n  X: { when: referred }\n",
 			`p.yml line 4: discount "X" needs exactly one of percent or amount`},
+		{"empty condition", "plans:\n  pro: { monthly: 5 }\ndiscounts:\n  X:\n    percent: 10\n    when: \"\"\n", "p.yml line 6: expected a condition"},
+		{"condition typo", "plans:\n  pro: { monthly: 5 }\ndiscounts:\n  X:\n    percent: 10\n    when: billing == \"annual\" and refered\n",
+			`p.yml:6:35 unknown name "refered"`},
+		{"condition syntax", "plans:\n  pro: { monthly: 5 }\ndiscounts:\n  X: { percent: 10, when: 'coupon_count >' }\n",
+			`p.yml:4:42 expected value after ">"`},
+		{"condition in a block scalar", "plans:\n  pro: { monthly: 5 }\ndiscounts:\n  X:\n    percent: 10\n    when: |\n      referred and\n",
+			`p.yml:6:11 expected value after "and"`},
 		{"unknown discount field", "plans:\n  pro: { monthly: 5 }\ndiscounts:\n  X:\n    percent: 10\n    if: referred\n",
 			`p.yml line 6: unknown discount field "if" (expected percent, amount or when)`},
 	}

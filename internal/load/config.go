@@ -6,6 +6,7 @@ import (
 	"go.yaml.in/yaml/v4"
 
 	"github.com/dilaziz/blast/internal/model"
+	"github.com/dilaziz/blast/internal/sim"
 )
 
 // parseConfig reads a pricing file. Unknown sections and fields are errors:
@@ -132,7 +133,11 @@ func parseDiscount(file string, e entry) (model.Discount, error) {
 	return d, nil
 }
 
-// condition reads a discount's `when:` expression.
+// condition reads a discount's `when:` expression. It is compiled here only
+// to reject mistakes with a file position; the model keeps the source text.
 func condition(file string, n *yaml.Node) (string, error) {
-	return text(file, n, "a condition")
+	if _, err := compile(file, n, sim.Schema()); err != nil {
+		return "", err
+	}
+	return n.Value, nil
 }
