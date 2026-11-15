@@ -48,16 +48,24 @@ func Dollars(cents int64) string {
 	if cents < 0 {
 		sign, cents = "-", -cents
 	}
-	whole := strconv.FormatInt(cents/100, 10)
+	return fmt.Sprintf("%s$%s.%02d", sign, Thousands(cents/100), cents%100)
+}
+
+// Thousands formats a whole number with separators: "12,000".
+func Thousands(n int64) string {
+	sign := ""
+	if n < 0 {
+		sign, n = "-", -n
+	}
+	digits := strconv.FormatInt(n, 10)
 	var b strings.Builder
-	b.WriteString(sign + "$")
-	for i, digit := range whole {
-		if i > 0 && (len(whole)-i)%3 == 0 {
+	b.WriteString(sign)
+	for i, digit := range digits {
+		if i > 0 && (len(digits)-i)%3 == 0 {
 			b.WriteByte(',')
 		}
 		b.WriteRune(digit)
 	}
-	fmt.Fprintf(&b, ".%02d", cents%100)
 	return b.String()
 }
 

@@ -129,3 +129,27 @@ was chosen and why, so it can be revisited.
   only grouping available to every other company.
 - **Fuzzing:** `make fuzz`. A 25-second run made 6.9 million attempts
   without a crash.
+
+## Step 6: CLI
+
+- **`blast check` with no flags reads `pricing.old.yml`, `pricing.new.yml`,
+  `customers.json` and `rules.yml`** from the current directory, which are the
+  names `init` writes. That is what makes `blast init && blast check` work.
+- **`init` also writes `pricing.fixed.yml`**, the section 5.7 fix, so the red
+  to green demo is two commands. A test proves it is byte-for-byte the
+  proposed pricing with that one edit applied.
+- **`init` refuses to overwrite** any existing file unless given `--force`,
+  and writes nothing when it refuses.
+- **Approvals arrive as `--approve finance,legal`.**
+- **Colour is decided at the edge.** Renderers always style their output; the
+  CLI writes through a colour-profile writer that strips codes for pipes and
+  files and honours `NO_COLOR`. `--no-color` forces the same on a terminal.
+- **`--format` lists only formats that exist.** It accepts `text` today;
+  `json` and `md` join the same table in Step 7.
+- **The text report adds a table of changed customers** to the plan's
+  section 5.6 layout, largest change first and capped at ten, because "who is
+  affected" is the question the tool exists to answer.
+- **A crash exits with 2 for free:** that is the Go runtime's exit status for
+  a panic, matching "2 = bad input or crash".
+- **The wordmark in `internal/report/palette.go` is drawn letter by letter**,
+  so it is a fifth place to touch when renaming the tool.
