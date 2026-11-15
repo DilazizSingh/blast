@@ -87,3 +87,19 @@ was chosen and why, so it can be revisited.
   recursion without tracking depth.
 - `Engine.Invoice(customer)` replaces the plan's `Invoice(c, cfg)` sketch so
   conditions compile once per config rather than once per customer.
+
+## Step 4: diff
+
+- **"Affected" means the invoice total changed.** A customer whose discounts
+  were swapped for an equal amount is not counted.
+- **A segment is a name plus a condition** in the expression language, so the
+  four built-in ones from the plan (`annual + referred`, `monthly`,
+  `legacy plans`, `has coupon`) are four lines of data. Segments may overlap.
+- **Plan facts (`legacy`) come from the new config**, the one under test.
+- **The config diff is a list of dotted paths** with old and new values
+  (`discounts.REFERRAL20.percent`). Reordering discounts changes stacking
+  without changing any setting, so it is reported as `discounts.order`.
+- **Changed customers are listed largest change first.** With thousands of
+  customers, the biggest movers are the ones worth reading.
+- **No progress bar.** Pricing is two integer passes per customer and finishes
+  before a bar could draw.
