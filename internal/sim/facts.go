@@ -21,13 +21,15 @@ var facts = func() map[string]fact {
 		"referred":     {expr.Bool, func(c model.Customer, _ model.Plan) expr.Value { return expr.BoolOf(c.Referred) }},
 		"legacy":       {expr.Bool, func(_ model.Customer, p model.Plan) expr.Value { return expr.BoolOf(p.Legacy) }},
 		"coupon_count": {expr.Num, func(c model.Customer, _ model.Plan) expr.Value { return expr.CountOf(len(c.Coupons)) }},
+		"quantity":     {expr.Num, func(c model.Customer, _ model.Plan) expr.Value { return expr.NumOf(c.Units() * 100) }},
 	}
 	// A discount's `when:` reads naturally with bare names; rules read better
 	// qualified. Both spellings mean the same fact.
 	for qualified, bare := range map[string]string{
 		"customer.id": "id", "customer.plan": "plan", "customer.billing": "billing",
 		"customer.referred": "referred", "customer.coupon_count": "coupon_count",
-		"plan.name": "plan", "plan.legacy": "legacy",
+		"customer.quantity": "quantity",
+		"plan.name":         "plan", "plan.legacy": "legacy",
 	} {
 		m[qualified] = m[bare]
 	}

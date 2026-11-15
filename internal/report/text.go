@@ -86,7 +86,7 @@ func customerLines(r Report) []string {
 		if names := broke[c.ID]; len(names) > 0 {
 			broken = "✗ " + strings.Join(names, ", ")
 		}
-		t.add(c.ID, c.Plan+" "+string(c.Billing),
+		t.add(c.ID, planLabel(c),
 			model.Dollars(row.Old.TotalCents), model.Dollars(row.New.TotalCents), model.Dollars(row.ChangeCents()), broken)
 	}
 	lines := t.lines(func(_ int, cells []string) {

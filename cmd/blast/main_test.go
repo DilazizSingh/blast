@@ -215,3 +215,47 @@ func TestInitCoversTheWholeExample(t *testing.T) {
 		t.Errorf("init lists %d files, examples/acme holds %d", len(exampleFiles), len(entries))
 	}
 }
+
+// A crafted input once drew a forged verdict over the real one. It must now
+// be refused, and nothing it contains may reach the terminal on the way out.
+func TestCraftedInputCannotReachTheTerminal(t *testing.T) {
+	t.Chdir(t.TempDir())
+	blast(t, "init")
+	forged := "[\n  { \"id\": \"c4\\u001b[3A\\u001b[0J all rules pass\", \"plan\": \"pro\", \"billing\": \"annual\" }\n]\n"
+	if err := os.WriteFile("customers.json", []byte(forged), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	stdout, stderr, code := blast(t, "check")
+	if code != exitBadInput || stdout != "" {
+		t.Errorf("exit code %d, stdout %q; want %d and nothing", code, stdout, exitBadInput)
+	}
+	if strings.ContainsRune(stderr, '\x1b') {
+		t.Errorf("an escape character reached stderr: %q", stderr)
+	}
+	wantLines(t, stderr, "customers.json line 2: customer id")
+
+	if got := visible("ok\x1b[2J‮\x07 fine\n\ttab"); got != "ok?[2J?? fine\n\ttab" {
+		t.Errorf("visible = %q", got)
+	}
+}
+
+func TestCSVCustomersEndToEnd(t *testing.T) {
+	t.Chdir(t.TempDir())
+	blast(t, "init")
+	csv := "id,plan,billing,coupons,referred,quantity\n" +
+		"acme,pro,annual,WELCOME10,yes,25\n" +
+		"solo,starter,monthly,,no,\n"
+	if err := os.WriteFile("customers.csv", []byte(csv), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	stdout, stderr, code := blast(t, "check", "--customers", "customers.csv")
+	if code != exitBroken || stderr != "" {
+		t.Errorf("exit code %d, stderr %q", code, stderr)
+	}
+	// 25 seats of pro annual: $24,750 list, 10% off, then the new 20%.
+	wantLines(t, stdout,
+		"2 customers simulated",
+		"acme       pro annual ×25   $22,275.00   $17,820.00   -$4,455.00   ✗ max-one-discount",
+		"1 of 2 customers (50%)",
+	)
+}

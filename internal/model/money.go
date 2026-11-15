@@ -10,6 +10,9 @@ import (
 // percent arithmetic far away from int64 overflow.
 const MaxCents = 1_000_000_000_00
 
+// MaxQuantity bounds how many seats one customer may hold.
+const MaxQuantity = 1_000_000_000
+
 // ParseHundredths reads a plain decimal with at most two fractional digits,
 // such as "29", "29.9" or "-12.50", as a whole number of hundredths. It is how
 // dollars become cents and percents become basis points without a float in

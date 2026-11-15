@@ -106,8 +106,13 @@ func (s *Scenario) crossCheck(in Inputs, lines []int) error {
 			if !ok {
 				return fail("unknown plan %q (not defined in %s)", c.Plan, side.file)
 			}
-			if _, ok := plan.Prices[c.Billing]; !ok {
+			price, ok := plan.Prices[c.Billing]
+			if !ok {
 				return fail("plan %q has no %s price in %s", c.Plan, c.Billing, side.file)
+			}
+			if price > model.MaxCents/c.Units() {
+				return fail("%s × %s on plan %q in %s is over the %s limit for one invoice",
+					model.Dollars(price), model.Thousands(c.Units()), c.Plan, side.file, model.Dollars(model.MaxCents))
 			}
 		}
 		for _, coupon := range c.Coupons {

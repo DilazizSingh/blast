@@ -19,7 +19,7 @@ type Step struct {
 
 // Invoice is what one customer is charged for one billing cycle, and why.
 type Invoice struct {
-	BaseCents  int64  // the plan's list price
+	BaseCents  int64  // the plan's list price times the customer's quantity
 	TotalCents int64  // what is charged
 	Steps      []Step // discounts, in the order they were applied
 }
@@ -55,10 +55,17 @@ func (e *Engine) Invoice(c model.Customer) (Invoice, error) {
 	if !ok {
 		return Invoice{}, fmt.Errorf("customer %q: unknown plan %q", c.ID, c.Plan)
 	}
-	base, ok := plan.Prices[c.Billing]
+	price, ok := plan.Prices[c.Billing]
 	if !ok {
 		return Invoice{}, fmt.Errorf("customer %q: plan %q has no %s price", c.ID, c.Plan, c.Billing)
 	}
+	units := c.Units()
+	// Dividing rather than multiplying keeps the check itself from overflowing.
+	if units > model.MaxQuantity || price > model.MaxCents/units {
+		return Invoice{}, fmt.Errorf("customer %q: %s × %s is over the %s limit for one invoice",
+			c.ID, model.Dollars(price), model.Thousands(units), model.Dollars(model.MaxCents))
+	}
+	base := price * units
 
 	inv := Invoice{BaseCents: base, TotalCents: base}
 	who := Facts{Customer: c, Plan: plan}

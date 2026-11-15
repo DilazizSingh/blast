@@ -56,7 +56,13 @@ type Customer struct {
 	Billing  Billing  `json:"billing"`
 	Coupons  []string `json:"coupons"`
 	Referred bool     `json:"referred"`
+	// Quantity is how many seats or units the plan's price is charged for.
+	// Zero means it was not stated, which is one.
+	Quantity int64 `json:"quantity,omitempty"`
 }
+
+// Units is the quantity the customer is billed for, never less than one.
+func (c Customer) Units() int64 { return max(c.Quantity, 1) }
 
 // HasCoupon reports whether the customer holds the named coupon.
 func (c Customer) HasCoupon(name string) bool { return slices.Contains(c.Coupons, name) }

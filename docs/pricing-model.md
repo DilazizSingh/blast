@@ -8,8 +8,8 @@ blast prints comes from the rules on this page, implemented in
 
 Money is whole cents in an `int64`. Nothing is ever a float: prices are read
 from the file as text (`99.50` becomes `9950`), and all arithmetic is integer
-arithmetic. Amounts are capped at $1 billion so no intermediate product can
-overflow.
+arithmetic. A price, and an invoice once multiplied by its quantity, is capped
+at $1 billion so no intermediate product can overflow.
 
 ## What an invoice is
 
@@ -18,6 +18,7 @@ monthly customers, a year for annual ones. Totals in a report therefore add
 monthly and annual invoices together, as "revenue per cycle".
 
     invoice = list price of the customer's plan for their billing period
+              times their quantity (seats; one unless stated)
               minus each discount that applies, one after another
 
 ## Which discounts apply
@@ -75,8 +76,9 @@ Half-cent cases round up: 50% off 3 cents leaves 2 cents, not 1.
 
 ## Fixed-amount discounts
 
-`amount: 10` takes $10.00 off the invoice, whatever the billing period. A
-fixed amount never takes an invoice below zero: $10 off a $9 invoice is $0.00.
+`amount: 10` takes $10.00 off the invoice, whatever the billing period and
+however many seats it covers. A fixed amount never takes an invoice below
+zero: $10 off a $9 invoice is $0.00.
 
 ## Conditions
 
@@ -91,6 +93,7 @@ about a customer:
 | `referred` | true/false | they were referred by someone |
 | `legacy` | true/false | their plan is marked `legacy: true` |
 | `coupon_count` | number | how many coupons they hold |
+| `quantity` | number | how many seats they are billed for |
 
 Each also answers to a qualified name (`customer.billing`, `plan.legacy`,
 `plan.name`, ...), which reads better in rules. Operators are `and`, `or`,

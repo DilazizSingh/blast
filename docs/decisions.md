@@ -153,3 +153,36 @@ was chosen and why, so it can be revisited.
   a panic, matching "2 = bad input or crash".
 - **The wordmark in `internal/report/palette.go` is drawn letter by letter**,
   so it is a fifth place to touch when renaming the tool.
+
+## Real data and hardened inputs (after Step 6)
+
+Asked for after the first milestone: work on real data, and close
+vulnerabilities.
+
+- **Customers have an optional `quantity`** (seats). The invoice is the plan
+  price times the quantity; a fixed-amount discount still comes off once per
+  invoice. Per-seat pricing is too common in real billing data to skip. A
+  stated quantity must be at least 1: zero is refused rather than read as one.
+- **Customers can be a CSV file** (`--customers customers.csv`), chosen by
+  the file extension. Columns are `id, plan, billing` plus optional
+  `coupons, referred, quantity`, in any order. Unknown columns are refused,
+  as unknown JSON fields are. A byte-order mark is tolerated in CSV and JSON.
+- **Names and conditions from input files must be visible text.** They are
+  printed on terminals and in pull-request comments, where an escape
+  sequence can redraw the screen. The proof-of-concept drew "all rules pass"
+  over a failing report. Control and formatting characters are now refused
+  at load, with the file and line.
+- **YAML anchors and aliases are refused.** A 978-byte pricing file with 30
+  nested aliases ran blast out of memory.
+- **A file must hold exactly one YAML document.** A second one used to be
+  ignored without a word, along with any pricing in it.
+- **Conditions are one line.** A folded scalar (`>`) is still the way to
+  wrap a long one.
+- **Error messages are made visible before they are printed**, as a second
+  line of defence behind the load-time checks.
+- **Strix was not run.** The installed skills drive the `strix` CLI, which
+  needs Docker and a paid LLM key, or uploads the code to Strix's cloud.
+  Neither is installed and both go against "free tools, nothing leaves the
+  machine". Its method was followed by hand instead: each finding has a
+  working exploit, a root-cause fix, and the exploit kept as a test. See
+  `docs/security.md`.

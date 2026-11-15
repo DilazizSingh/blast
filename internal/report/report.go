@@ -103,6 +103,16 @@ func Detail(v rules.Verdict) string {
 	return detail
 }
 
+// planLabel describes what a customer is billed for: "pro annual", or
+// "pro annual ×12" for twelve seats.
+func planLabel(c model.Customer) string {
+	label := c.Plan + " " + string(c.Billing)
+	if c.Units() > 1 {
+		label += " ×" + model.Thousands(c.Units())
+	}
+	return label
+}
+
 // plural formats a count with its noun: "1 customer", "12,000 customers".
 func plural(n int, noun string) string {
 	if n != 1 {

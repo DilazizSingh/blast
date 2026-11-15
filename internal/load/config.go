@@ -30,7 +30,7 @@ func parseConfig(file string, data []byte) (model.Config, error) {
 			cfg.Discounts, err = parseDiscounts(file, s.val)
 		case "payment":
 			cfg.Payment = map[string]string{}
-			flatten("payment", s.val, cfg.Payment)
+			err = flatten(file, "payment", s.val, cfg.Payment)
 		default:
 			err = errAt(file, s.key, "unknown section %q (expected plans, discounts or payment)", s.key.Value)
 		}
@@ -136,8 +136,9 @@ func parseDiscount(file string, e entry) (model.Discount, error) {
 // condition reads a discount's `when:` expression. It is compiled here only
 // to reject mistakes with a file position; the model keeps the source text.
 func condition(file string, n *yaml.Node) (string, error) {
-	if _, err := compile(file, n, sim.Schema()); err != nil {
+	cond, err := compile(file, n, sim.Schema())
+	if err != nil {
 		return "", err
 	}
-	return n.Value, nil
+	return cond.String(), nil
 }

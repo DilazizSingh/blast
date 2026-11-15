@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
+	"unicode"
 
 	"github.com/charmbracelet/colorprofile"
 
@@ -84,7 +86,19 @@ func parse(fs *flag.FlagSet, args []string) (code int, ok bool) {
 	}
 }
 
+// fail reports an error and returns the bad-input exit code. Errors quote
+// from input files, so anything that is not visible text is replaced first:
+// a crafted file must not be able to repaint the terminal through a message.
 func fail(stderr io.Writer, err error) int {
-	fmt.Fprintf(stderr, "%s: %v\n", name, err)
+	fmt.Fprintf(stderr, "%s: %s\n", name, visible(err.Error()))
 	return exitBadInput
+}
+
+func visible(s string) string {
+	return strings.Map(func(r rune) rune {
+		if r == '\n' || r == '\t' || unicode.IsPrint(r) {
+			return r
+		}
+		return '?'
+	}, s)
 }
