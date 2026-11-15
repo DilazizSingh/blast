@@ -24,3 +24,15 @@ was chosen and why, so it can be revisited.
   framework, and it keeps the dependency list short. The plan allows either.
 - **YAML via `go.yaml.in/yaml/v3`**, the YAML organisation's maintained
   continuation of `gopkg.in/yaml.v3`, which is archived. Same API.
+
+## Step 1: model
+
+- **Percent discounts are stored as basis points** (`20%` is `2000`), not the
+  plan's `Percent int`. Stripe coupons allow `12.5%`, and one fixed-point
+  parser (`model.ParseHundredths`) then serves dollars-to-cents, percents and
+  the numbers in the rule language. For whole percents the arithmetic is
+  identical to the plan's formula.
+- **A plan's prices are a map keyed by billing period**, not two fields. A
+  missing period means "not sold", which a zero in a struct field could not
+  tell apart from a free plan.
+- **Amounts are capped at $1 billion** so percent math cannot overflow.
